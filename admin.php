@@ -2,7 +2,7 @@
 <html lang="zh-cn">
 <head>
     <meta charset="UTF-8">
-    <!--    bootstrap-->
+    <!--bootstrap-->
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
     <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
@@ -34,9 +34,23 @@
         ));
         if ($key == $password) {
             if ($control == "start") {
-                echo "<div class=\"alert alert-success\"><strong>成功! </strong>开启直播成功</div>";
+                if (file_exists("/var/www/html/127/rtmp_auth.php")) {
+                    echo "<div class=\"alert alert-success\"><strong>成功! </strong>直播已打开，不必重复开启</div>";
+                } else if (rename("/var/www/html/127/rtmp_auth.php.bak",
+                    "/var/www/html/127/rtmp_auth.php")) {
+                    echo "<div class=\"alert alert-success\"><strong>成功! </strong>开启直播成功</div>";
+                } else {
+                    echo "<div class=\"alert alert-danger\"><strong>失败! </strong>开启直播失败</div>";
+                }
             } else if ($control == "stop") {
-                echo "<div class=\"alert alert-success\"><strong>成功! </strong>关闭直播成功</div>";
+                if (!file_exists("/var/www/html/127/rtmp_auth.php")) {
+                    echo "<div class=\"alert alert-success\"><strong>成功! </strong>直播已关闭，不必重复关闭</div>";
+                } else if (rename("/var/www/html/127/rtmp_auth.php",
+                    "/var/www/html/127/rtmp_auth.php.bak")) {
+                    echo "<div class=\"alert alert-success\"><strong>成功! </strong>关闭直播成功</div>";
+                } else {
+                    echo "<div class=\"alert alert-danger\"><strong>失败! </strong>关闭直播失败</div>";
+                }
             }
         } else {
             echo "<div class=\"alert alert-danger\"><strong>失败! </strong>管理员key不匹配</div>";
@@ -67,9 +81,9 @@
         if ($result->num_rows == 1) {
             $lastTime = $result->fetch_assoc()['last_submit_time'];
             // 以前尝试过，检查时间差
-            $minute = 1;
+            $minute = 3;
             if (time() - $lastTime < $minute * 60) {
-                // 两次操作时差小于五分钟
+                // 两次操作时差小于3分钟
                 echo "<div class=\"alert alert-danger\"><strong>失败! </strong>两次操作间隔小于{$minute}分钟</div>";
             } else {
                 controlLive($control, $key, $conn, $ip);
